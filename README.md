@@ -17,6 +17,7 @@ A conversational AI tool for generating software specifications through guided i
   - [End-to-End Tests](#end-to-end-tests)
   - [Coverage](#coverage)
 - [Database](#database)
+- [Deployment](#deployment)
 - [Project Structure](#project-structure)
 
 ## Features
@@ -63,6 +64,7 @@ Create a `.env` file in the project root:
 
 ```env
 MISTRAL_API_KEY=your_mistral_api_key_here
+DATABASE_URL=./data/specz.db
 ```
 
 ## Development
@@ -138,6 +140,37 @@ bun run db:migrate
 # Open Drizzle Studio
 bun run db:studio
 ```
+
+## Deployment
+
+### Railway
+
+1. Install the Railway CLI and login:
+
+```sh
+brew install railway
+railway login
+```
+
+2. Initialize and deploy:
+
+```sh
+railway init
+railway up
+```
+
+3. Set environment variables in Railway dashboard:
+
+```
+MISTRAL_API_KEY=your_key_here
+DATABASE_URL=/data/specz.db
+```
+
+4. Add a volume for SQLite persistence:
+   - Go to your service → Settings → Volumes
+   - Add volume with mount path: `/data`
+
+The `railway.json` config handles the build and start commands automatically.
 
 ## Project Structure
 
