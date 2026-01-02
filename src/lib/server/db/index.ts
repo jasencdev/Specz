@@ -8,16 +8,19 @@ import { building } from '$app/environment';
 let db: ReturnType<typeof drizzle<typeof schema>>;
 
 if (!building) {
-	const { env } = await import('$env/dynamic/private');
-	if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
+	const DATABASE_URL = process.env.DATABASE_URL;
+
+	if (!DATABASE_URL) {
+		throw new Error('DATABASE_URL is not set');
+	}
 
 	// Ensure directory exists
-	const dir = dirname(env.DATABASE_URL);
+	const dir = dirname(DATABASE_URL);
 	if (dir && dir !== '.' && !existsSync(dir)) {
 		mkdirSync(dir, { recursive: true });
 	}
 
-	const client = new Database(env.DATABASE_URL);
+	const client = new Database(DATABASE_URL);
 	db = drizzle(client, { schema });
 }
 
