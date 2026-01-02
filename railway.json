@@ -4,7 +4,7 @@
 		"builder": "RAILPACK"
 	},
 	"deploy": {
-		"startCommand": "bun run db:push && node build",
+		"startCommand": "bun run db:push && node build/index.js",
 		"restartPolicyType": "ON_FAILURE"
 	}
 }
