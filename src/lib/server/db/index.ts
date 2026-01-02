@@ -1,10 +1,24 @@
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
 import * as schema from './schema';
-import { env } from '$env/dynamic/private';
+import { mkdirSync, existsSync } from 'node:fs';
+import { dirname } from 'node:path';
+import { building } from '$app/environment';
 
-if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
+let db: ReturnType<typeof drizzle<typeof schema>>;
 
-const client = new Database(env.DATABASE_URL);
+if (!building) {
+	const { env } = await import('$env/dynamic/private');
+	if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
 
-export const db = drizzle(client, { schema });
+	// Ensure directory exists
+	const dir = dirname(env.DATABASE_URL);
+	if (dir && dir !== '.' && !existsSync(dir)) {
+		mkdirSync(dir, { recursive: true });
+	}
+
+	const client = new Database(env.DATABASE_URL);
+	db = drizzle(client, { schema });
+}
+
+export { db };
