@@ -4,7 +4,7 @@
 		"builder": "RAILPACK"
 	},
 	"deploy": {
-		"startCommand": "bun run db:push && node build/index.js",
+		"startCommand": "bunx drizzle-kit push --force && node build/index.js",
 		"restartPolicyType": "ON_FAILURE"
 	}
 }
