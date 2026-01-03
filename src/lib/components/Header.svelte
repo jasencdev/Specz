@@ -19,7 +19,7 @@
 				</form>
 			{:else}
 				<a href="/login" class="nav-link">Log in</a>
-				<a href="/register" class="nav-link primary">Get Started</a>
+				<a href="/login" class="nav-link primary">Get Started</a>
 			{/if}
 		</nav>
 	</div>
