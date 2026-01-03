@@ -2,6 +2,10 @@
 
 A conversational AI tool for generating software specifications through guided interviews.
 
+**Live Demo:** [specz.jasenc.dev](https://specz.jasenc.dev)
+
+![Specz Screenshot](src/lib/assets/screenshot.png)
+
 ## Table of Contents
 
 - [Features](#features)
