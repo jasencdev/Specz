@@ -1,6 +1,5 @@
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
-import { hash } from '@node-rs/argon2';
 import { encodeBase32LowerCase } from '@oslojs/encoding';
 import { sha256 } from '@oslojs/crypto/sha2';
 import { encodeBase64url, encodeHexLowerCase } from '@oslojs/encoding';
@@ -15,7 +14,6 @@ client.exec(`
 	CREATE TABLE IF NOT EXISTS user (
 		id TEXT PRIMARY KEY,
 		email TEXT NOT NULL UNIQUE,
-		password_hash TEXT NOT NULL,
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL
 	);
@@ -24,6 +22,13 @@ client.exec(`
 		id TEXT PRIMARY KEY,
 		user_id TEXT NOT NULL REFERENCES user(id),
 		expires_at INTEGER NOT NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS magic_link (
+		id TEXT PRIMARY KEY,
+		email TEXT NOT NULL,
+		expires_at INTEGER NOT NULL,
+		created_at INTEGER NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS spec (
@@ -49,25 +54,18 @@ export function generateSessionToken() {
 	return encodeBase64url(bytes);
 }
 
-export async function createTestUser(email = `test-${generateId()}@example.com`, password = 'password123') {
+export async function createTestUser(email = `test-${generateId()}@example.com`) {
 	const userId = generateId();
-	const passwordHash = await hash(password, {
-		memoryCost: 19456,
-		timeCost: 2,
-		outputLen: 32,
-		parallelism: 1
-	});
-
 	const now = new Date();
+
 	await testDb.insert(schema.user).values({
 		id: userId,
 		email,
-		passwordHash,
 		createdAt: now,
 		updatedAt: now
 	});
 
-	return { userId, email, password };
+	return { userId, email };
 }
 
 export async function createTestSession(userId: string) {
@@ -81,6 +79,20 @@ export async function createTestSession(userId: string) {
 	});
 
 	return { token, sessionId };
+}
+
+export async function createTestMagicLink(email: string, expiresInMs = 1000 * 60 * 15) {
+	const token = generateSessionToken();
+	const tokenHash = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+
+	await testDb.insert(schema.magicLink).values({
+		id: tokenHash,
+		email,
+		expiresAt: new Date(Date.now() + expiresInMs),
+		createdAt: new Date()
+	});
+
+	return { token, tokenHash };
 }
 
 export async function createTestSpec(userId: string, overrides: Partial<schema.Spec> = {}) {
@@ -105,6 +117,7 @@ export async function createTestSpec(userId: string, overrides: Partial<schema.S
 export async function clearTables() {
 	await testDb.delete(schema.spec);
 	await testDb.delete(schema.session);
+	await testDb.delete(schema.magicLink);
 	await testDb.delete(schema.user);
 }
 

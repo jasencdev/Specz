@@ -12,7 +12,11 @@ bun run check        # TypeScript and Svelte checks
 bun run lint         # Run Prettier + ESLint
 bun run format       # Auto-format with Prettier
 bun run test         # Run all tests once
-bun run test:unit    # Run tests in watch mode
+bun run test:unit    # Run unit tests (src/lib)
+bun run test:integration  # Run integration tests (src/tests)
+bun run test:watch   # Run tests in watch mode
+bun run test:e2e     # Run Playwright e2e tests
+bun run test:e2e:ui  # Run e2e with Playwright UI
 ```
 
 ### Database Commands (Drizzle)
@@ -28,9 +32,9 @@ bun run db:studio    # Open Drizzle Studio GUI
 
 Specz is a conversational AI tool that conducts product intake interviews and generates software specifications.
 
-**Two modes:**
-- **Specz**: Interview → Generate spec
-- **SpeczCheck**: Analyze existing spec → Feedback
+**Two modes** (stored as `mode` field in spec table):
+- **specz**: Interview → Generate spec (AI says `READY_TO_GENERATE` when done interviewing)
+- **speczcheck**: Analyze existing spec → Feedback
 
 ### Tech Stack
 
@@ -52,18 +56,18 @@ Specz is a conversational AI tool that conducts product intake interviews and ge
 
 ### Database Schema
 
-- **user**: id, email, passwordHash, createdAt, updatedAt
+- **user**: id, email, createdAt, updatedAt
 - **session**: id, userId, expiresAt
-- **spec**: id, userId, title, mode, status, conversation (JSON), output, createdAt, updatedAt
+- **magic_link**: id (token hash), email, expiresAt, createdAt
+- **spec**: id, userId, title, mode (`specz`|`speczcheck`), status (`draft`|`complete`), conversation (JSON array of `{role, content}`), output (generated markdown), createdAt, updatedAt
 
 ### Authentication
 
-Custom session-based auth in `src/lib/server/auth.ts`:
-- Email/password authentication
-- Argon2 password hashing via @node-rs/argon2
-- Oslo libraries for crypto/encoding
+Magic link authentication via Resend:
+- User enters email at `/auth` → magic link sent → click link → authenticated
+- Tokens: 18 random bytes, stored as SHA256 hash, 15-min expiry, single-use
 - Session validation in `hooks.server.ts` populates `event.locals.user` and `event.locals.session`
-- Protected routes under `/specs/*` redirect to `/login` if not authenticated
+- Protected routes under `/specs/*` redirect to `/auth` if not authenticated
 
 ### API Streaming
 
@@ -73,4 +77,5 @@ Chat endpoint (`/api/chat`) uses Mistral streaming with SSE format. The Chat com
 
 Requires in `.env`:
 - `DATABASE_URL` - SQLite file path (e.g., `local.db`)
-- `MISTRAL_API_KEY` - Mistral API key for AI features
+- `MISTRAL_API_KEY` - Mistral API key for AI chat
+- `RESEND_API_KEY` - Resend API key for magic link emails

@@ -14,6 +14,7 @@
 		initialMessages?: Array<{ role: string; content: string }>;
 		onGenerate?: () => void;
 		onMessagesChange?: (messages: Array<{ role: string; content: string }>) => void;
+		disabled?: boolean;
 	}
 
 	let {
@@ -21,7 +22,8 @@
 		mode = 'specz',
 		initialMessages = [],
 		onGenerate,
-		onMessagesChange
+		onMessagesChange,
+		disabled = false
 	}: Props = $props();
 
 	let messages = $state<Array<{ role: string; content: string }>>(initialMessages);
@@ -151,26 +153,35 @@
 	</div>
 
 	<div class="input-section">
-		{#if showGenerateButton}
-			<button class="generate-btn" onclick={() => onGenerate?.()}>
-				Generate Spec
-			</button>
-		{/if}
-
 		<div class="input-row">
 			<input
 				bind:this={inputElement}
 				bind:value={input}
 				onkeydown={(e) => e.key === 'Enter' && !e.shiftKey && send()}
 				placeholder={mode === 'speczcheck' ? 'Ask about the analysis...' : 'Describe what you want to build...'}
-				disabled={isLoading}
+				disabled={isLoading || disabled}
 			/>
-			<button class="send" onclick={send} aria-label="Send message" disabled={isLoading}>
+			<button class="send" onclick={send} aria-label="Send message" disabled={isLoading || disabled}>
 				<svg viewBox="0 0 24 24" fill="currentColor">
 					<path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
 				</svg>
 			</button>
 		</div>
+
+		{#if showGenerateButton}
+			<button class="generate-btn" onclick={() => onGenerate?.()} disabled={disabled}>
+				{#if disabled}
+					<span class="btn-loading">
+						<span class="btn-dot"></span>
+						<span class="btn-dot"></span>
+						<span class="btn-dot"></span>
+					</span>
+					Generating...
+				{:else}
+					Generate Spec
+				{/if}
+			</button>
+		{/if}
 	</div>
 </div>
 
@@ -393,8 +404,34 @@
 		transition: background 0.2s;
 	}
 
-	.generate-btn:hover {
+	.generate-btn:hover:not(:disabled) {
 		background: #404040;
+	}
+
+	.generate-btn:disabled {
+		cursor: not-allowed;
+	}
+
+	.btn-loading {
+		display: inline-flex;
+		gap: 0.2rem;
+		margin-right: 0.5rem;
+	}
+
+	.btn-dot {
+		width: 6px;
+		height: 6px;
+		background: #f5f5f4;
+		border-radius: 50%;
+		animation: bounce 1.4s infinite ease-in-out both;
+	}
+
+	.btn-dot:nth-child(1) {
+		animation-delay: -0.32s;
+	}
+
+	.btn-dot:nth-child(2) {
+		animation-delay: -0.16s;
 	}
 
 	.input-row {

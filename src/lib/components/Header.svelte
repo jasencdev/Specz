@@ -18,8 +18,8 @@
 					<button type="submit" class="logout-btn">Log out</button>
 				</form>
 			{:else}
-				<a href="/login" class="nav-link">Log in</a>
-				<a href="/login" class="nav-link primary">Get Started</a>
+				<a href="/auth" class="nav-link">Log in</a>
+				<a href="/auth" class="nav-link primary">Get Started</a>
 			{/if}
 		</nav>
 	</div>

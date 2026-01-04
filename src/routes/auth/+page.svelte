@@ -2,33 +2,44 @@
 	import { enhance } from '$app/forms';
 
 	let { form } = $props();
+	let loading = $state(false);
 </script>
 
 <div class="auth-page">
 	<div class="auth-card">
-		<h1>Create account</h1>
+		<h1>Sign in to Specz</h1>
+		<p class="subtitle">Enter your email and we'll send you a magic link.</p>
 
-		<form method="POST" use:enhance>
+		<form
+			method="POST"
+			use:enhance={() => {
+				loading = true;
+				return async ({ update }) => {
+					loading = false;
+					await update();
+				};
+			}}
+		>
 			<label>
 				Email
-				<input type="email" name="email" autocomplete="email" required />
-			</label>
-
-			<label>
-				Password
-				<input type="password" name="password" autocomplete="new-password" required minlength="6" />
+				<input
+					type="email"
+					name="email"
+					autocomplete="email"
+					required
+					placeholder="you@example.com"
+					disabled={loading}
+				/>
 			</label>
 
 			{#if form?.message}
 				<p class="error">{form.message}</p>
 			{/if}
 
-			<button type="submit">Create account</button>
+			<button type="submit" disabled={loading}>
+				{loading ? 'Sending...' : 'Send magic link'}
+			</button>
 		</form>
-
-		<p class="switch">
-			Already have an account? <a href="/login">Log in</a>
-		</p>
 	</div>
 </div>
 
@@ -51,10 +62,17 @@
 	}
 
 	h1 {
-		margin: 0 0 1.5rem;
+		margin: 0 0 0.5rem;
 		font-size: 1.75rem;
 		text-align: center;
 		color: #2d2d2d;
+	}
+
+	.subtitle {
+		margin: 0 0 1.5rem;
+		text-align: center;
+		color: #5a5a5a;
+		font-size: 0.95rem;
 	}
 
 	form {
@@ -84,6 +102,11 @@
 		border-color: #2d2d2d;
 	}
 
+	input:disabled {
+		background: #f5f5f4;
+		cursor: not-allowed;
+	}
+
 	button {
 		padding: 0.75rem;
 		background: #2d2d2d;
@@ -95,8 +118,13 @@
 		margin-top: 0.5rem;
 	}
 
-	button:hover {
+	button:hover:not(:disabled) {
 		background: #404040;
+	}
+
+	button:disabled {
+		opacity: 0.7;
+		cursor: not-allowed;
 	}
 
 	.error {
@@ -106,17 +134,5 @@
 		padding: 0.5rem;
 		background: #fef2f2;
 		border-radius: 6px;
-	}
-
-	.switch {
-		margin: 1.5rem 0 0;
-		text-align: center;
-		font-size: 0.9rem;
-		color: #5a5a5a;
-	}
-
-	.switch a {
-		color: #2d2d2d;
-		font-weight: 500;
 	}
 </style>

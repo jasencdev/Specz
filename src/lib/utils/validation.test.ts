@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateEmail, validatePassword } from './validation';
+import { validateEmail } from './validation';
 
 describe('validation', () => {
 	describe('validateEmail', () => {
@@ -32,30 +32,6 @@ describe('validation', () => {
 		it('should reject emails that are too long', () => {
 			const longEmail = 'a'.repeat(250) + '@b.com';
 			expect(validateEmail(longEmail)).toBe(false);
-		});
-	});
-
-	describe('validatePassword', () => {
-		it('should accept valid passwords', () => {
-			expect(validatePassword('123456')).toBe(true);
-			expect(validatePassword('password123')).toBe(true);
-			expect(validatePassword('a'.repeat(255))).toBe(true);
-		});
-
-		it('should reject passwords that are too short', () => {
-			expect(validatePassword('')).toBe(false);
-			expect(validatePassword('12345')).toBe(false);
-			expect(validatePassword('abc')).toBe(false);
-		});
-
-		it('should reject passwords that are too long', () => {
-			expect(validatePassword('a'.repeat(256))).toBe(false);
-		});
-
-		it('should reject non-string values', () => {
-			expect(validatePassword(null)).toBe(false);
-			expect(validatePassword(undefined)).toBe(false);
-			expect(validatePassword(123456)).toBe(false);
 		});
 	});
 });

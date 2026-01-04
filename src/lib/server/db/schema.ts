@@ -3,7 +3,6 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 export const user = sqliteTable('user', {
 	id: text('id').primaryKey(),
 	email: text('email').notNull().unique(),
-	passwordHash: text('password_hash').notNull(),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date()),
@@ -18,6 +17,15 @@ export const session = sqliteTable('session', {
 		.notNull()
 		.references(() => user.id),
 	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull()
+});
+
+export const magicLink = sqliteTable('magic_link', {
+	id: text('id').primaryKey(),
+	email: text('email').notNull(),
+	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date())
 });
 
 export const spec = sqliteTable('spec', {
@@ -44,3 +52,4 @@ export const spec = sqliteTable('spec', {
 export type Session = typeof session.$inferSelect;
 export type User = typeof user.$inferSelect;
 export type Spec = typeof spec.$inferSelect;
+export type MagicLink = typeof magicLink.$inferSelect;

@@ -1,13 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { verify } from '@node-rs/argon2';
 import { eq } from 'drizzle-orm';
 import {
 	testDb,
 	schema,
 	createTestUser,
 	createTestSession,
-	clearTables,
-	generateId
+	createTestMagicLink,
+	clearTables
 } from '../helpers';
 
 describe('auth integration', () => {
@@ -15,9 +14,9 @@ describe('auth integration', () => {
 		await clearTables();
 	});
 
-	describe('user registration', () => {
-		it('should create a new user with hashed password', async () => {
-			const { userId, email, password } = await createTestUser();
+	describe('user creation', () => {
+		it('should create a new user', async () => {
+			const { userId, email } = await createTestUser();
 
 			const [user] = await testDb
 				.select()
@@ -26,16 +25,6 @@ describe('auth integration', () => {
 
 			expect(user).toBeDefined();
 			expect(user.email).toBe(email);
-			expect(user.passwordHash).not.toBe(password);
-
-			// Verify password was hashed correctly
-			const isValid = await verify(user.passwordHash, password, {
-				memoryCost: 19456,
-				timeCost: 2,
-				outputLen: 32,
-				parallelism: 1
-			});
-			expect(isValid).toBe(true);
 		});
 
 		it('should reject duplicate emails', async () => {
@@ -100,41 +89,28 @@ describe('auth integration', () => {
 		});
 	});
 
-	describe('password verification', () => {
-		it('should verify correct password', async () => {
-			const { userId, password } = await createTestUser();
+	describe('magic link', () => {
+		it('should create a magic link for an email', async () => {
+			const email = 'test@example.com';
+			const { tokenHash } = await createTestMagicLink(email);
 
-			const [user] = await testDb
+			const [magicLink] = await testDb
 				.select()
-				.from(schema.user)
-				.where(eq(schema.user.id, userId));
+				.from(schema.magicLink)
+				.where(eq(schema.magicLink.id, tokenHash));
 
-			const isValid = await verify(user.passwordHash, password, {
-				memoryCost: 19456,
-				timeCost: 2,
-				outputLen: 32,
-				parallelism: 1
-			});
-
-			expect(isValid).toBe(true);
+			expect(magicLink).toBeDefined();
+			expect(magicLink.email).toBe(email);
+			expect(magicLink.expiresAt.getTime()).toBeGreaterThan(Date.now());
 		});
 
-		it('should reject incorrect password', async () => {
-			const { userId } = await createTestUser();
+		it('should generate unique tokens', async () => {
+			const email = 'test@example.com';
+			const link1 = await createTestMagicLink(email);
+			const link2 = await createTestMagicLink(email);
 
-			const [user] = await testDb
-				.select()
-				.from(schema.user)
-				.where(eq(schema.user.id, userId));
-
-			const isValid = await verify(user.passwordHash, 'wrongpassword', {
-				memoryCost: 19456,
-				timeCost: 2,
-				outputLen: 32,
-				parallelism: 1
-			});
-
-			expect(isValid).toBe(false);
+			expect(link1.token).not.toBe(link2.token);
+			expect(link1.tokenHash).not.toBe(link2.tokenHash);
 		});
 	});
 });

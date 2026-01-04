@@ -118,6 +118,7 @@
 				initialMessages={data.spec.conversation}
 				onGenerate={handleGenerate}
 				onMessagesChange={handleMessagesChange}
+				disabled={isGenerating}
 			/>
 		{/if}
 	</div>
